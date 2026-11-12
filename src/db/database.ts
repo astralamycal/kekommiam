@@ -1,11 +1,32 @@
+/**
+ * @file src/db/database.ts
+ * @description SQLite database initialization and singleton connection manager.
+ */
+
 import * as SQLite from "expo-sqlite";
 
+let dbInstance: SQLite.SQLiteDatabase | null = null;
+
+/**
+ * Returns the active database instance, opening it only once.
+ *
+ * @returns {Promise<SQLite.SQLiteDatabase>} Active SQLite database handle.
+ */
+export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
+  if (!dbInstance) {
+    dbInstance = await SQLite.openDatabaseAsync("kekommiam.db");
+    await dbInstance.execAsync("PRAGMA foreign_keys = ON;");
+  }
+  return dbInstance;
+}
+
+/**
+ * Initializes all database tables and constraints on app boot.
+ *
+ * @returns {Promise<SQLite.SQLiteDatabase>} Initialized SQLite database.
+ */
 export async function initializeDatabase(): Promise<SQLite.SQLiteDatabase> {
-
-const db = await SQLite.openDatabaseAsync("kekommiam.db");
-
-  // Enable foreign key constraints in SQLite
-  await db.execAsync("PRAGMA foreign_keys = ON;");
+  const db = await getDatabase();
 
   await db.execAsync(`
     -- 1. Categories Table

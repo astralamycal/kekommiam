@@ -3,10 +3,10 @@
  * @description Planner tab screen rendering weekly scheduled meals and constraint tracking.
  */
 
-import * as SQLite from 'expo-sqlite';
 import { useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors, Spacing } from '../../constants/theme';
+import { getDatabase } from '../../db/database';
 import { MealManager } from '../../services/MealManager';
 import { Meal } from '../../types';
 
@@ -15,16 +15,14 @@ export default function PlannerScreen() {
   const [meatCount, setMeatCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Helper date range for the current week demonstration
   const startDate = '2026-06-01';
   const endDate = '2026-06-07';
 
   const loadPlannerData = useCallback(async () => {
     try {
-      const db = await SQLite.openDatabaseAsync('kekommiam.db');
+      const db = await getDatabase();
       const mealManager = new MealManager(db);
 
-      // Fetch scheduled meals and calculate constraint count in parallel
       const [weeklyMeals, count] = await Promise.all([
         mealManager.getAll(),
         mealManager.countMeatMealsInWeek(startDate, endDate),
@@ -45,7 +43,7 @@ export default function PlannerScreen() {
 
   const handleScheduleTestMeal = async () => {
     try {
-      const db = await SQLite.openDatabaseAsync('kekommiam.db');
+      const db = await getDatabase();
       const mealManager = new MealManager(db);
       
       await mealManager.create({
@@ -62,7 +60,6 @@ export default function PlannerScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Constraint Tracker Banner */}
       <View style={styles.constraintCard}>
         <Text style={styles.constraintTitle}>Weekly Constraints</Text>
         <Text style={styles.constraintText}>
@@ -77,7 +74,6 @@ export default function PlannerScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Scheduled Meals List */}
       <FlatList
         data={meals}
         keyExtractor={(item) => item.id.toString()}

@@ -1,13 +1,19 @@
 /**
  * @file src/app/(tabs)/dishes.tsx
- * @description Dishes tab screen rendering the dish library using the DishManager service and DishCard partial.
+ * @description Dishes tab screen rendering the dish library.
  */
 
-import * as SQLite from 'expo-sqlite';
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { DishCard } from '../../components/dishes/DishCard';
 import { Colors, Spacing } from '../../constants/theme';
+import { getDatabase } from '../../db/database';
 import { DishManager } from '../../services/DishManager';
 import { Dish } from '../../types';
 
@@ -17,7 +23,7 @@ export default function DishesScreen() {
 
   const loadDishes = useCallback(async () => {
     try {
-      const db = await SQLite.openDatabaseAsync('kekommiam.db');
+      const db = await getDatabase();
       const dishManager = new DishManager(db);
       const allDishes = await dishManager.getAll();
       setDishes(allDishes);
@@ -34,16 +40,16 @@ export default function DishesScreen() {
 
   const handleAddSampleDish = async () => {
     try {
-      const db = await SQLite.openDatabaseAsync('kekommiam.db');
+      const db = await getDatabase();
       const dishManager = new DishManager(db);
       await dishManager.create({
         name: 'Spaghetti Bolognese',
-        categoryId: 1,
+        categoryId: null,
         role: 'complete',
         containsMeat: true,
         rating: 5,
       });
-      loadDishes();
+      await loadDishes();
     } catch (err) {
       console.error('Failed to create sample dish:', err);
     }
@@ -53,7 +59,10 @@ export default function DishesScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Dish Library</Text>
-        <TouchableOpacity style={styles.addButton} onPress={handleAddSampleDish}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={handleAddSampleDish}
+        >
           <Text style={styles.addButtonText}>+ Add Test Dish</Text>
         </TouchableOpacity>
       </View>
@@ -65,7 +74,9 @@ export default function DishesScreen() {
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
           !loading ? (
-            <Text style={styles.emptyText}>No dishes found. Tap above to add your first recipe!</Text>
+            <Text style={styles.emptyText}>
+              No dishes found. Tap above to add your first recipe!
+            </Text>
           ) : null
         }
       />
